@@ -6,9 +6,9 @@ Request-header - {
     Authorization: Basic Base64(login:password)
 }
 
-* All unsuccessfull response have error code and message
-
 If user haven't this header or have some problem - Response code 401
+
+* All unsuccessfull response have error code and message
 
 ###POST /api/user/register
 
