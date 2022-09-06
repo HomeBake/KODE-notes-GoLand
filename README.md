@@ -10,39 +10,63 @@ If user haven't this header or have some problem - Response code 401
 
 * All unsuccessfull response have error code and message
 
-###POST /api/user/register
-
-Request-body: { 
-    login: string
-    Password: string
-}
-
-If success
-
-Response-body {
-    token: string //after changing auth type to jwt
-}
-
-### GET api/notes/{sort: {
-                           "id" |
-                           "-id" |
-                           "title" |
-                           "-title" |
-                           "body" |
-                           "-body" |
-                           "expir" |
-                           "-expire" |
-                           "isprivate"|
-                           "-isprivate"
-                         }
-If success
-Response-body - {
-    {
-         id: number 
-         title: string
-         body: string
-         expire: number
-         isprivate: bool
-    }
-}
+ Endpoints
+  
+    GET API/notes           RESPONSE-body -   
+                                            {notes:  
+    											{  
+												id: number,  
+												body: string,  
+												title: string,  
+												isprivate: boolean,  
+												expire: int,  
+												userId: int,  
+										    },...  
+										}   
+    GET API/notes/{noteId}  RESPONSE-body - {  
+                                                id: number,  
+												body: string,  
+												title: string,  
+												isprivate: boolean,  
+												expire: int,  
+												userId: int,  
+											}  
+    
+    POST API/notes          REQUEST-body - {  
+                                                body: string,  
+												title: string,  
+												isprivate: boolean,  
+												expire: int,  
+										    }  
+				            RESPONSE-body: {result: boolean}  
+    PUT API/notes           REQUEST-body - {  
+												id: number,  
+												body: string,
+                                                title: string,  
+												isprivate: boolean,  
+												expire: int,  
+										    }  
+						    RESPONSE-body: {result:boolean}  
+    DELETE API/notes/{noteId}   
+                            RESPONSE-body - {result: boolean}  
+    POST API/register       REQUEST-body - {  
+											login: string,  
+											password: string,  
+	                                        }  
+						    RESPONSE-body: {result: boolean}  
+    POST API/login           
+							REQUEST-body - {  
+											login: string,  
+											password: string, 
+											}  
+							RESPONSE-body:  {  
+											id: int,   
+											login: string, 
+											password: string,  
+											}  
+    POST API/notes/{id}     REQUEST-body: {  
+											USERACCESSID: int,  
+											MODE: string,  
+											}  
+                            RESPONSE-body: {result: boolean}   
 
