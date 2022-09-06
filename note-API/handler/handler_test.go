@@ -826,4 +826,135 @@ func TestUpdateNote(t *testing.T) {
 			t.Errorf("Invalid JSONbody %s expected %s", w.Body.Bytes(), expectedMessage)
 		}
 	})
+	t.Run("Bad JSON", func(t *testing.T) {
+		appHost := "localhost:8080"
+		url := fmt.Sprintf("http://%s/api/notes/1", appHost)
+		note := []byte(`{ bad : bad}`)
+		jsonStr, _ := json.MarshalIndent(note, "", "\t")
+		r, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+		auth := []byte("1:1")
+		basic := base64.StdEncoding.EncodeToString(auth)
+		authHeader := fmt.Sprintf("Basic %s", basic)
+		r.Header.Set("Authorization", authHeader)
+		w := httptest.NewRecorder()
+		UpdateNote(w, r)
+		expectedStatus := 400
+		expectedMessage := utils.BadRequestMessage()
+		if expectedStatus != w.Code {
+			t.Errorf("Invalid code %d expected %d", w.Code, expectedStatus)
+		}
+		if !bytes.Equal(expectedMessage, w.Body.Bytes()) {
+			t.Errorf("Invalid JSONbody %s expected %s", w.Body.Bytes(), expectedMessage)
+		}
+	})
+	t.Run("User unauthorized", func(t *testing.T) {
+		appHost := "localhost:8080"
+		url := fmt.Sprintf("http://%s/api/notes/1", appHost)
+		note := models.Note{
+			ID:        1,
+			BODY:      "update",
+			TITLE:     "update",
+			ISPRIVATE: false,
+			EXPIRE:    1,
+		}
+		jsonStr, _ := json.MarshalIndent(note, "", "\t")
+		r, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+		auth := []byte("bad:bad")
+		basic := base64.StdEncoding.EncodeToString(auth)
+		authHeader := fmt.Sprintf("Basic %s", basic)
+		r.Header.Set("Authorization", authHeader)
+		w := httptest.NewRecorder()
+		UpdateNote(w, r)
+		expectedStatus := 401
+		expectedMessage := utils.UnauthorizedMessage()
+		if expectedStatus != w.Code {
+			t.Errorf("Invalid code %d expected %d", w.Code, expectedStatus)
+		}
+		if !bytes.Equal(expectedMessage, w.Body.Bytes()) {
+			t.Errorf("Invalid JSONbody %s expected %s", w.Body.Bytes(), expectedMessage)
+		}
+	})
+}
+
+func TestDeleteNote(t *testing.T) {
+	t.Run("User delete note success", func(t *testing.T) {
+		appHost := "localhost:8080"
+		url := fmt.Sprintf("http://%s/api/notes/1", appHost)
+		jsonStr := []byte(``)
+		r, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+		auth := []byte("1:1")
+		basic := base64.StdEncoding.EncodeToString(auth)
+		authHeader := fmt.Sprintf("Basic %s", basic)
+		r.Header.Set("Authorization", authHeader)
+		w := httptest.NewRecorder()
+		DeleteNote(w, r, utils.GetNoteRe)
+		expectedStatus := 200
+		expectedMessage := utils.SuccessMessage()
+		if expectedStatus != w.Code {
+			t.Errorf("Invalid code %d expected %d", w.Code, expectedStatus)
+		}
+		if !bytes.Equal(expectedMessage, w.Body.Bytes()) {
+			t.Errorf("Invalid JSONbody %s expected %s", w.Body.Bytes(), expectedMessage)
+		}
+	})
+	t.Run("User try delete someone else note success", func(t *testing.T) {
+		appHost := "localhost:8080"
+		url := fmt.Sprintf("http://%s/api/notes/6", appHost)
+		jsonStr := []byte(``)
+		r, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+		auth := []byte("1:1")
+		basic := base64.StdEncoding.EncodeToString(auth)
+		authHeader := fmt.Sprintf("Basic %s", basic)
+		r.Header.Set("Authorization", authHeader)
+		w := httptest.NewRecorder()
+		DeleteNote(w, r, utils.GetNoteRe)
+		expectedStatus := 403
+		expectedMessage := utils.ForbiddenMessage()
+		if expectedStatus != w.Code {
+			t.Errorf("Invalid code %d expected %d", w.Code, expectedStatus)
+		}
+		if !bytes.Equal(expectedMessage, w.Body.Bytes()) {
+			t.Errorf("Invalid JSONbody %s expected %s", w.Body.Bytes(), expectedMessage)
+		}
+	})
+	t.Run("Bad query", func(t *testing.T) {
+		appHost := "localhost:8080"
+		url := fmt.Sprintf("http://%s/api/notes/6s", appHost)
+		jsonStr := []byte(``)
+		r, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+		auth := []byte("1:1")
+		basic := base64.StdEncoding.EncodeToString(auth)
+		authHeader := fmt.Sprintf("Basic %s", basic)
+		r.Header.Set("Authorization", authHeader)
+		w := httptest.NewRecorder()
+		DeleteNote(w, r, utils.GetNoteRe)
+		expectedStatus := 404
+		expectedMessage := utils.NotFoundMessage()
+		if expectedStatus != w.Code {
+			t.Errorf("Invalid code %d expected %d", w.Code, expectedStatus)
+		}
+		if !bytes.Equal(expectedMessage, w.Body.Bytes()) {
+			t.Errorf("Invalid JSONbody %s expected %s", w.Body.Bytes(), expectedMessage)
+		}
+	})
+	t.Run("User unAuth", func(t *testing.T) {
+		appHost := "localhost:8080"
+		url := fmt.Sprintf("http://%s/api/notes/6s", appHost)
+		jsonStr := []byte(``)
+		r, _ := http.NewRequest("POST", url, bytes.NewBuffer(jsonStr))
+		auth := []byte("bad:bad")
+		basic := base64.StdEncoding.EncodeToString(auth)
+		authHeader := fmt.Sprintf("Basic %s", basic)
+		r.Header.Set("Authorization", authHeader)
+		w := httptest.NewRecorder()
+		DeleteNote(w, r, utils.GetNoteRe)
+		expectedStatus := 401
+		expectedMessage := utils.UnauthorizedMessage()
+		if expectedStatus != w.Code {
+			t.Errorf("Invalid code %d expected %d", w.Code, expectedStatus)
+		}
+		if !bytes.Equal(expectedMessage, w.Body.Bytes()) {
+			t.Errorf("Invalid JSONbody %s expected %s", w.Body.Bytes(), expectedMessage)
+		}
+	})
 }
