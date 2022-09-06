@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 	"note-API/models"
+	"note-API/utils"
 	"sort"
 	"strconv"
 	"time"
@@ -184,6 +185,7 @@ func isNoteDummy(noteID string) bool {
 
 func getNoteDummy(noteID string) (models.Note, error) {
 	id, err := strconv.Atoi(noteID)
+	utils.ErrorLog.Printf("BD ERROR: %s", err)
 	return NoteDB[id], err
 }
 

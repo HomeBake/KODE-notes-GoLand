@@ -3,8 +3,10 @@ package db
 import (
 	"errors"
 	"note-API/models"
+	"note-API/utils"
 	"os"
 	"reflect"
+	"strconv"
 )
 
 func getType() string {
@@ -66,6 +68,7 @@ func IsUserHaveAccess(userID int, noteID int) bool {
 }
 
 func DeleteNoteInTime(noteID int, second int, ch chan bool) {
+	utils.InfoLog.Printf("TIME DELETE note: %s will be deleted in %s second ", strconv.Itoa(noteID), strconv.Itoa(second))
 	switch getType() {
 	case "postgres":
 		{

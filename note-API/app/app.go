@@ -2,7 +2,6 @@ package app
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/lib/pq"
 	"note-API/utils"
 
@@ -18,6 +17,7 @@ type App struct {
 
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
+	utils.InfoLog.Printf("User trying connect to %s", r.URL)
 	switch {
 	case r.Method == http.MethodGet && utils.GetNotesRe.MatchString(r.URL.Path):
 		handler.GetNotes(w, r)
@@ -47,7 +47,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		handler.LoginUser(w, r)
 		return
 	default:
-		fmt.Fprintf(w, r.URL.Path)
+		utils.InfoLog.Printf("User trying connect to nonexistent URL %s", r.URL)
 		return
 	}
 }
@@ -55,15 +55,21 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func (a *App) InitializeBd(db string) {
 	utils.InfoLog.Printf("Database initialize on %s mode", db)
 	if db == "postgres" {
-		os.Setenv("bdType", "postgres")
-		os.Setenv("dialect", "postgres")
-		os.Setenv("host", "localhost")
-		os.Setenv("port", "5432")
-		os.Setenv("user", "postgres")
-		os.Setenv("password", "root")
-		os.Setenv("dbname", "postgres")
+		err := os.Setenv("bdType", "postgres")
+		err = os.Setenv("dialect", "postgres")
+		err = os.Setenv("host", "localhost")
+		err = os.Setenv("port", "5432")
+		err = os.Setenv("user", "postgres")
+		err = os.Setenv("password", "root")
+		err = os.Setenv("dbname", "postgres")
+		if err != nil {
+			utils.ErrorLog.Printf("APP ERROR: %s", err)
+		}
 	} else {
-		os.Setenv("bdType", "dummy")
+		err := os.Setenv("bdType", "dummy")
+		if err != nil {
+			utils.ErrorLog.Printf("APP ERROR: %s", err)
+		}
 		database.FillDB()
 	}
 }
@@ -71,9 +77,10 @@ func (a *App) InitializeBd(db string) {
 func (a *App) Run(addr string) {
 	mux := http.ServeMux{}
 	mux.HandleFunc("/api/", ServeHTTP)
+	utils.InfoLog.Printf("Server listen %s address", addr)
 	err := http.ListenAndServe(addr, &mux)
 	if err != nil {
-		utils.ErrorLog.Fatalf("Cannot listen port %s", addr)
+		utils.ErrorLog.Printf("Cannot listen address %s", addr)
 		os.Exit(1)
 	}
 }

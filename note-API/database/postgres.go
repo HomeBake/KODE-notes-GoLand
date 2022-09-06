@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"note-API/models"
+	"note-API/utils"
 	"os"
 	"time"
 )
@@ -73,8 +74,16 @@ func deleteNoteInTime(noteID int, second int, ch chan bool) {
 	time.Sleep(time.Duration(second) * time.Second)
 	db := OpenConnection()
 	query := "DELETE FROM NOTE WHERE ID = $1"
-	_, _ = db.Exec(query, noteID)
-	defer db.Close()
+	_, err := db.Exec(query, noteID)
+	if err != nil {
+		utils.ErrorLog.Printf("BD ERROR: %s", err)
+	}
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			utils.ErrorLog.Printf("BD ERROR: %s", err)
+		}
+	}(db)
 	ch <- true
 }
 
@@ -86,16 +95,33 @@ func addUser(log string, pass string) (ok bool, err error) {
 	rows := bd.QueryRow(query, log)
 	err = rows.Scan(&id)
 	if err == nil || id != 0 {
-		defer bd.Close()
+		utils.ErrorLog.Printf("BD ERROR: %s", err)
+		defer func(bd *sql.DB) {
+			err := bd.Close()
+			if err != nil {
+				utils.ErrorLog.Printf("BD ERROR: %s", err)
+			}
+		}(bd)
 		return false, err
 	}
 	query = "INSERT INTO USERS (login, password) VALUES ($1, $2)"
 	_, err = bd.Exec(query, log, pass)
 	if err != nil {
-		defer bd.Close()
+		utils.ErrorLog.Printf("BD ERROR: %s", err)
+		defer func(bd *sql.DB) {
+			err := bd.Close()
+			if err != nil {
+				utils.ErrorLog.Printf("BD ERROR: %s", err)
+			}
+		}(bd)
 		return false, err
 	}
-	defer bd.Close()
+	defer func(bd *sql.DB) {
+		err := bd.Close()
+		if err != nil {
+			utils.ErrorLog.Printf("BD ERROR: %s", err)
+		}
+	}(bd)
 	return true, nil
 }
 
@@ -140,8 +166,18 @@ func getNotes(sortField string, userID int) ([]models.Note, error) {
 		}
 		notes = append(notes, note)
 	}
-	defer rows.Close()
-	defer bd.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			utils.ErrorLog.Printf("BD ERROR: %s", err)
+		}
+	}(rows)
+	defer func(bd *sql.DB) {
+		err := bd.Close()
+		if err != nil {
+			utils.ErrorLog.Printf("BD ERROR: %s", err)
+		}
+	}(bd)
 	return notes, nil
 }
 
@@ -152,7 +188,12 @@ func isNote(noteID string) bool {
 	id := 0
 	err := row.Scan(&id)
 	if err != nil || id == 0 {
-		defer bd.Close()
+		defer func(bd *sql.DB) {
+			err := bd.Close()
+			if err != nil {
+				utils.ErrorLog.Printf("BD ERROR: %s", err)
+			}
+		}(bd)
 		return false
 	}
 	return true
@@ -165,10 +206,20 @@ func getNote(noteID string) (models.Note, error) {
 	row := bd.QueryRow(query, noteID)
 	err := row.Scan(&note.ID, &note.BODY, &note.TITLE, &note.EXPIRE, &note.ISPRIVATE, &note.USERID)
 	if err != nil {
-		defer bd.Close()
+		defer func(bd *sql.DB) {
+			err := bd.Close()
+			if err != nil {
+				utils.ErrorLog.Printf("BD ERROR: %s", err)
+			}
+		}(bd)
 		return note, err
 	}
-	defer bd.Close()
+	defer func(bd *sql.DB) {
+		err := bd.Close()
+		if err != nil {
+			utils.ErrorLog.Printf("BD ERROR: %s", err)
+		}
+	}(bd)
 	return note, nil
 }
 
@@ -178,7 +229,12 @@ func getAccessID(userAccessID int, noteID int) int {
 	row := db.QueryRow(query, userAccessID, noteID)
 	id := 0
 	_ = row.Scan(&id)
-	defer db.Close()
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			utils.ErrorLog.Printf("BD ERROR: %s", err)
+		}
+	}(db)
 	return id
 }
 
@@ -186,9 +242,17 @@ func addAccess(userAccessID int, noteID int) (int64, error) {
 	db := OpenConnection()
 	query := "INSERT INTO ACCESS (userid, noteid) VALUES ($1, $2)"
 	result, err := db.Exec(query, userAccessID, noteID)
-	defer db.Close()
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			utils.ErrorLog.Printf("BD ERROR: %s", err)
+		}
+	}(db)
 	var id int64
 	id, err = result.LastInsertId()
+	if err != nil {
+		utils.ErrorLog.Printf("BD ERROR: %s", err)
+	}
 	return id, err
 }
 
@@ -196,7 +260,15 @@ func deleteAccess(accessID int) (int, error) {
 	db := OpenConnection()
 	query := "DELETE FROM ACCESS WHERE ID = $1"
 	_, err := db.Exec(query, accessID)
-	defer db.Close()
+	if err != nil {
+		utils.ErrorLog.Printf("BD ERROR: %s", err)
+	}
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			utils.ErrorLog.Printf("BD ERROR: %s", err)
+		}
+	}(db)
 	return accessID, err
 }
 
@@ -207,10 +279,21 @@ func addNote(note models.Note, userID int) (int, error) {
 	noteID := 0
 	err := raw.Scan(&noteID)
 	if err != nil {
-		defer db.Close()
+		utils.ErrorLog.Printf("BD ERROR: %s", err)
+		defer func(db *sql.DB) {
+			err := db.Close()
+			if err != nil {
+				utils.ErrorLog.Printf("BD ERROR: %s", err)
+			}
+		}(db)
 		return 0, err
 	}
-	defer db.Close()
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			utils.ErrorLog.Printf("BD ERROR: %s", err)
+		}
+	}(db)
 	return noteID, nil
 }
 
@@ -220,7 +303,15 @@ func updateNote(note models.Note, userID int) (int, error) {
 	row := db.QueryRow(query, note.ID, note.BODY, note.TITLE, note.EXPIRE, note.ISPRIVATE, userID)
 	id := 0
 	err := row.Scan(&id)
-	defer db.Close()
+	if err != nil {
+		utils.ErrorLog.Printf("BD ERROR: %s", err)
+	}
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			utils.ErrorLog.Printf("BD ERROR: %s", err)
+		}
+	}(db)
 	return id, err
 }
 
@@ -230,6 +321,14 @@ func deleteNote(noteID int) (int, error) {
 	row := db.QueryRow(query, noteID)
 	id := 0
 	err := row.Scan(&id)
-	defer db.Close()
+	if err != nil {
+		utils.ErrorLog.Printf("BD ERROR: %s", err)
+	}
+	defer func(db *sql.DB) {
+		err := db.Close()
+		if err != nil {
+			utils.ErrorLog.Printf("BD ERROR: %s", err)
+		}
+	}(db)
 	return id, err
 }
