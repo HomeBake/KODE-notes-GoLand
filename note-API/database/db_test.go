@@ -462,3 +462,12 @@ func TestUpdateNote(t *testing.T) {
 		t.Errorf("Wrong notes return, expect :%s, returned: %s ", expectedBytes, notesByte)
 	}
 }
+
+func TestDeleteNote(t *testing.T) {
+	noteID := 1
+	id, _ := deleteNoteDummy(noteID)
+	isDeleted := isNoteDummy(strconv.Itoa(noteID))
+	if isDeleted || id != noteID {
+		t.Error("Note is not deleted")
+	}
+}
