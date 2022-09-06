@@ -275,7 +275,7 @@ func DeleteNote(w http.ResponseWriter, r *http.Request, getNoteRe *regexp.Regexp
 	}
 	matches := getNoteRe.FindStringSubmatch(r.URL.Path)
 	if len(matches) < 2 {
-		http.NotFound(w, r)
+		utils.ReturnJsonResponse(w, http.StatusNotFound, utils.NotFoundMessage())
 		return
 	}
 	noteID, _ := strconv.Atoi(matches[1])
@@ -284,11 +284,7 @@ func DeleteNote(w http.ResponseWriter, r *http.Request, getNoteRe *regexp.Regexp
 		utils.ReturnJsonResponse(w, http.StatusForbidden, utils.ForbiddenMessage())
 		return
 	}
-	id, err := db.DeleteNote(noteID)
-	if err != nil || id == 0 {
-		utils.ReturnJsonResponse(w, http.StatusBadRequest, utils.BadRequestMessage())
-		return
-	}
+	_, _ = db.DeleteNote(noteID)
 	utils.ReturnJsonResponse(w, http.StatusOK, utils.SuccessMessage())
 	return
 }
