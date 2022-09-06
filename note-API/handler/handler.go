@@ -107,7 +107,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 	if isOK {
 		notesBytes, _ := json.MarshalIndent(userDate, "", "\t")
 		utils.ReturnJsonResponse(w, http.StatusOK, notesBytes)
-		utils.InfoLog.Print("USER LOGIN: login: %s", userDate.LOGIN)
+		utils.InfoLog.Printf("USER LOGIN: login: %s", userDate.LOGIN)
 		return
 	} else {
 		utils.InfoLog.Printf("USER LOGIN: wrong password for login:  %s", userDate.LOGIN)
@@ -143,13 +143,13 @@ func GetNote(w http.ResponseWriter, r *http.Request, getNoteRe *regexp.Regexp) {
 	}
 	matches := getNoteRe.FindStringSubmatch(r.URL.Path)
 	if len(matches) < 2 {
-		utils.InfoLog.Printf("GET NOTE: Bad query: %d", matches)
+		utils.InfoLog.Printf("GET NOTE: Bad query: %s", r.URL.Path)
 		utils.ReturnJsonResponse(w, http.StatusNotFound, utils.NotFoundMessage())
 		return
 	}
 	id := matches[1]
 	if !db.IsNote(id) {
-		utils.InfoLog.Printf("GET NOTE: Try GET nonexistent note: %d", id)
+		utils.InfoLog.Printf("GET NOTE: Try GET nonexistent note: %s", id)
 		utils.ReturnJsonResponse(w, http.StatusBadRequest, utils.BadRequestMessage())
 		return
 	}
@@ -180,7 +180,7 @@ func SetAccess(w http.ResponseWriter, r *http.Request, getNoteRe *regexp.Regexp)
 	}
 	matches := getNoteRe.FindStringSubmatch(r.URL.Path)
 	if len(matches) < 2 {
-		utils.InfoLog.Printf("SET ACCESS: Bad query: %1", matches)
+		utils.InfoLog.Printf("SET ACCESS: Bad query: %s", r.URL.Path)
 		utils.ReturnJsonResponse(w, http.StatusNotFound, utils.NotFoundMessage())
 		return
 	}
@@ -190,7 +190,7 @@ func SetAccess(w http.ResponseWriter, r *http.Request, getNoteRe *regexp.Regexp)
 		return
 	}
 	if !db.IsUserNote(user.ID, noteID) {
-		utils.InfoLog.Print("SET ACCESS: User: %s try get access without permission.", user.LOGIN)
+		utils.InfoLog.Printf("SET ACCESS: User: %s try get access without permission.", user.LOGIN)
 		utils.ReturnJsonResponse(w, http.StatusForbidden, utils.ForbiddenMessage())
 		return
 	}
@@ -208,7 +208,7 @@ func SetAccess(w http.ResponseWriter, r *http.Request, getNoteRe *regexp.Regexp)
 			utils.InfoLog.Print("SET ACCESS: Try ADD existent note")
 			utils.ReturnJsonResponse(w, http.StatusBadRequest, utils.BadRequestMessage())
 		} else {
-			utils.InfoLog.Print("SET ACCESS: User: %d  give access to note: %d for user: %d", user.ID, noteID, accessDate.USERACCESSID)
+			utils.InfoLog.Printf("SET ACCESS: User: %d  give access to note: %d for user: %d", user.ID, noteID, accessDate.USERACCESSID)
 			_, err = db.AddAccess(accessDate.USERACCESSID, noteID)
 			utils.ReturnJsonResponse(w, http.StatusOK, utils.SuccessMessage())
 		}
@@ -217,7 +217,7 @@ func SetAccess(w http.ResponseWriter, r *http.Request, getNoteRe *regexp.Regexp)
 			utils.InfoLog.Print("SET ACCESS: Try DELETE nonexistent note")
 			utils.ReturnJsonResponse(w, http.StatusBadRequest, utils.BadRequestMessage())
 		} else {
-			utils.InfoLog.Print("SET ACCESS: user take away access to note: %d for user: %s", noteID, user.LOGIN)
+			utils.InfoLog.Printf("SET ACCESS: user take away access to note: %d for user: %s", noteID, user.LOGIN)
 			_, err = db.DeleteAccess(accessID)
 			utils.ReturnJsonResponse(w, http.StatusOK, utils.SuccessMessage())
 		}
@@ -254,7 +254,7 @@ func AddNote(w http.ResponseWriter, r *http.Request) {
 		ch := make(chan bool)
 		go db.DeleteNoteInTime(noteID, note.EXPIRE, ch)
 	}
-	utils.InfoLog.Print("ADD NOTE: user: %s, added note: %d", user.LOGIN, noteID)
+	utils.InfoLog.Printf("ADD NOTE: user: %s, added note: %d", user.LOGIN, noteID)
 	utils.ReturnJsonResponse(w, http.StatusOK, utils.SuccessMessage())
 	return
 }
@@ -274,14 +274,14 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 	}
 	isUserNote := db.IsUserNote(user.ID, note.ID)
 	if !isUserNote {
-		utils.InfoLog.Print("UPDATE NOTE: User: %s try get access without permission", user.LOGIN)
+		utils.InfoLog.Printf("UPDATE NOTE: User: %s try get access without permission", user.LOGIN)
 		utils.ReturnJsonResponse(w, http.StatusForbidden, utils.ForbiddenMessage())
 		return
 	}
 	var id int
 	id, err = db.UpdateNote(note, user.ID)
 	if err != nil || id == 0 {
-		utils.InfoLog.Print("UPDATE NOTE: Update note error: %s", err)
+		utils.InfoLog.Printf("UPDATE NOTE: Update note error: %s", err)
 		utils.ReturnJsonResponse(w, http.StatusBadRequest, utils.BadRequestMessage())
 		return
 	}
@@ -289,7 +289,7 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 		ch := make(chan bool)
 		go db.DeleteNoteInTime(id, note.EXPIRE, ch)
 	}
-	utils.InfoLog.Print("UPDATE NOTE: user: %s, updating note: %d", user.LOGIN, note.ID)
+	utils.InfoLog.Printf("UPDATE NOTE: user: %s, updating note: %d", user.LOGIN, note.ID)
 	utils.ReturnJsonResponse(w, http.StatusOK, utils.SuccessMessage())
 	return
 }
@@ -309,11 +309,11 @@ func DeleteNote(w http.ResponseWriter, r *http.Request, getNoteRe *regexp.Regexp
 	noteID, _ := strconv.Atoi(matches[1])
 	isUserNote := db.IsUserNote(user.ID, noteID)
 	if !isUserNote {
-		utils.InfoLog.Print("DELETE NOTE: User: %s try get access without permission", user.LOGIN)
+		utils.InfoLog.Printf("DELETE NOTE: User: %s try get access without permission", user.LOGIN)
 		utils.ReturnJsonResponse(w, http.StatusForbidden, utils.ForbiddenMessage())
 		return
 	}
-	utils.InfoLog.Print("DELETE NOTE user: %s delete note: %d", user.LOGIN, noteID)
+	utils.InfoLog.Printf("DELETE NOTE user: %s delete note: %d", user.LOGIN, noteID)
 	_, _ = db.DeleteNote(noteID)
 	utils.ReturnJsonResponse(w, http.StatusOK, utils.SuccessMessage())
 	return
