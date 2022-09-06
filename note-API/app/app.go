@@ -4,23 +4,12 @@ import (
 	"database/sql"
 	"fmt"
 	_ "github.com/lib/pq"
+	"note-API/utils"
 
 	"net/http"
+	database "note-API/database"
 	"note-API/handler"
-	utils "note-API/utils"
 	"os"
-	"regexp"
-)
-
-var (
-	getNotesRe     = regexp.MustCompile(`/notes/?$`)
-	getNoteRe      = regexp.MustCompile(`/notes/(\d+)*$`) // /notes/1
-	setAccessRe    = getNoteRe
-	addNoteRe      = getNotesRe
-	updateNoteRe   = getNotesRe
-	deleteNoteRe   = getNoteRe
-	registerUserRe = regexp.MustCompile(`/user/register/?$`)
-	loginUserRe    = regexp.MustCompile(`/user/login/?$`)
 )
 
 type App struct {
@@ -30,31 +19,31 @@ type App struct {
 func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 	switch {
-	case r.Method == http.MethodGet && getNotesRe.MatchString(r.URL.Path):
+	case r.Method == http.MethodGet && utils.GetNotesRe.MatchString(r.URL.Path):
 		handler.GetNotes(w, r)
 		return
-	case r.Method == http.MethodGet && getNoteRe.MatchString(r.URL.Path):
-		handler.GetNote(w, r, getNoteRe)
+	case r.Method == http.MethodGet && utils.GetNoteRe.MatchString(r.URL.Path):
+		handler.GetNote(w, r, utils.GetNoteRe)
 		return
-	case r.Method == http.MethodPost && setAccessRe.MatchString(r.URL.Path):
-		handler.SetAccess(w, r, setAccessRe)
+	case r.Method == http.MethodPost && utils.SetAccessRe.MatchString(r.URL.Path):
+		handler.SetAccess(w, r, utils.SetAccessRe)
 		return
-	case r.Method == http.MethodPost && loginUserRe.MatchString(r.URL.Path):
+	case r.Method == http.MethodPost && utils.LoginUserRe.MatchString(r.URL.Path):
 		handler.LoginUser(w, r)
 		return
-	case r.Method == http.MethodPost && addNoteRe.MatchString(r.URL.Path):
+	case r.Method == http.MethodPost && utils.AddNoteRe.MatchString(r.URL.Path):
 		handler.AddNote(w, r)
 		return
-	case r.Method == http.MethodPut && updateNoteRe.MatchString(r.URL.Path):
+	case r.Method == http.MethodPut && utils.UpdateNoteRe.MatchString(r.URL.Path):
 		handler.UpdateNote(w, r)
 		return
-	case r.Method == http.MethodDelete && deleteNoteRe.MatchString(r.URL.Path):
-		handler.DeleteNote(w, r, setAccessRe)
+	case r.Method == http.MethodDelete && utils.DeleteNoteRe.MatchString(r.URL.Path):
+		handler.DeleteNote(w, r, utils.SetAccessRe)
 		return
-	case r.Method == http.MethodPost && registerUserRe.MatchString(r.URL.Path):
+	case r.Method == http.MethodPost && utils.RegisterUserRe.MatchString(r.URL.Path):
 		handler.RegisterUser(w, r)
 		return
-	case r.Method == http.MethodPost && loginUserRe.MatchString(r.URL.Path):
+	case r.Method == http.MethodPost && utils.LoginUserRe.MatchString(r.URL.Path):
 		handler.LoginUser(w, r)
 		return
 	default:
@@ -74,7 +63,7 @@ func (a *App) InitializeBd(db string) {
 		os.Setenv("dbname", "postgres")
 	} else {
 		os.Setenv("bdType", "dummy")
-		utils.FillDB()
+		database.FillDB()
 	}
 }
 

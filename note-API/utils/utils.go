@@ -2,8 +2,18 @@ package utils
 
 import (
 	"net/http"
-	"note-API/database"
-	"note-API/models"
+	"regexp"
+)
+
+var (
+	GetNotesRe     = regexp.MustCompile(`/notes/?$`)
+	GetNoteRe      = regexp.MustCompile(`/notes/(\d+)*$`) // /notes/1
+	SetAccessRe    = GetNoteRe
+	AddNoteRe      = GetNotesRe
+	UpdateNoteRe   = GetNotesRe
+	DeleteNoteRe   = GetNoteRe
+	RegisterUserRe = regexp.MustCompile(`/user/register/?$`)
+	LoginUserRe    = regexp.MustCompile(`/user/login/?$`)
 )
 
 func ReturnJsonResponse(res http.ResponseWriter, httpCode int, resMessage []byte) {
@@ -58,85 +68,4 @@ func NotFoundMessage() []byte {
    		"message": "Not found",
 	}`)
 	return HandlerMessage
-}
-
-func FillDB() {
-	note := models.Note{
-		ID:        1,
-		BODY:      "1",
-		TITLE:     "2",
-		ISPRIVATE: true,
-		EXPIRE:    0,
-		USERID:    1,
-	}
-	db.NoteDB[note.ID] = note
-	note = models.Note{
-		ID:        2,
-		BODY:      "1",
-		TITLE:     "2",
-		ISPRIVATE: false,
-		EXPIRE:    0,
-		USERID:    1,
-	}
-	db.NoteDB[note.ID] = note
-	note = models.Note{
-		ID:        3,
-		BODY:      "1",
-		TITLE:     "2",
-		ISPRIVATE: false,
-		EXPIRE:    0,
-		USERID:    1,
-	}
-	db.NoteDB[note.ID] = note
-	note = models.Note{
-		ID:        4,
-		BODY:      "1",
-		TITLE:     "2",
-		ISPRIVATE: false,
-		EXPIRE:    0,
-		USERID:    1,
-	}
-	db.NoteDB[note.ID] = note
-	note = models.Note{
-		ID:        5,
-		BODY:      "1",
-		TITLE:     "2",
-		ISPRIVATE: false,
-		EXPIRE:    0,
-		USERID:    1,
-	}
-	db.NoteDB[note.ID] = note
-	note = models.Note{
-		ID:        6,
-		BODY:      "1",
-		TITLE:     "2",
-		ISPRIVATE: false,
-		EXPIRE:    0,
-		USERID:    1,
-	}
-	db.NoteDB[note.ID] = note
-	user := models.UserData{
-		ID:       1,
-		LOGIN:    "1",
-		PASSWORD: "1",
-	}
-	db.UserDB[user.ID] = user
-	user = models.UserData{
-		ID:       2,
-		LOGIN:    "2",
-		PASSWORD: "1",
-	}
-	db.UserDB[user.ID] = user
-	user = models.UserData{
-		ID:       3,
-		LOGIN:    "3",
-		PASSWORD: "1",
-	}
-	db.UserDB[user.ID] = user
-	access := models.AccessDate{
-		ID:           1,
-		USERACCESSID: 2,
-		NOTEID:       1,
-	}
-	db.AccessDateDB[access.ID] = access
 }

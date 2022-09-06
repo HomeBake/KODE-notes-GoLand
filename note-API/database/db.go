@@ -1,8 +1,7 @@
 package db
 
 import (
-	"database/sql"
-	"fmt"
+	"errors"
 	"note-API/models"
 	"os"
 	"reflect"
@@ -12,40 +11,19 @@ func getType() string {
 	return os.Getenv("bdType")
 }
 
-func OpenConnection() *sql.DB {
-	dialect := os.Getenv("dialect")
-	host := os.Getenv("host")
-	port := os.Getenv("port")
-	user := os.Getenv("user")
-	password := os.Getenv("password")
-	dbname := os.Getenv("dbname")
-	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
-	bd, err := sql.Open(dialect, psqlInfo)
-	if err != nil {
-		panic(err)
-	}
-	err = bd.Ping()
-	if err != nil {
-		panic(err)
-	}
-
-	return bd
-}
-
-func isItemExists(arrayType interface{}, item interface{}) bool {
+func isItemExists(arrayType interface{}, item interface{}) (bool, error) {
 	arr := reflect.ValueOf(arrayType)
 	if arr.Kind() != reflect.Array {
-		panic("Invalid data-type")
+		return false, errors.New(" invalid data-type")
 	}
 
 	for i := 0; i < arr.Len(); i++ {
 		if arr.Index(i).Interface() == item {
-			return true
+			return true, nil
 		}
 	}
 
-	return false
+	return false, nil
 }
 
 func IsUser(l string, p string) (bool, int) {
@@ -57,7 +35,6 @@ func IsUser(l string, p string) (bool, int) {
 	default:
 		{
 			return isUserDummy(l, p)
-
 		}
 	}
 }

@@ -115,10 +115,10 @@ func GetNotes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	sortField := r.URL.Query().Get("sort")
-
 	notes, err := db.GetNotes(sortField, user.ID)
 	if err != nil {
-		utils.ReturnJsonResponse(w, http.StatusUnauthorized, utils.ErrorMessage(err))
+		utils.ReturnJsonResponse(w, http.StatusBadRequest, utils.ErrorMessage(err))
+		return
 	}
 	notesBytes, _ := json.MarshalIndent(notes, "", "\t")
 	utils.ReturnJsonResponse(w, http.StatusOK, notesBytes)
@@ -141,11 +141,7 @@ func GetNote(w http.ResponseWriter, r *http.Request, getNoteRe *regexp.Regexp) {
 		utils.ReturnJsonResponse(w, http.StatusBadRequest, utils.BadRequestMessage())
 		return
 	}
-	note, err := db.GetNote(id)
-	if err != nil {
-		utils.ReturnJsonResponse(w, http.StatusBadRequest, utils.BadRequestMessage())
-		return
-	}
+	note, _ := db.GetNote(id)
 	var noteBytes []byte
 	if note.ISPRIVATE == false {
 		noteBytes, _ = json.MarshalIndent(note, "", "\t")
@@ -194,24 +190,20 @@ func SetAccess(w http.ResponseWriter, r *http.Request, getNoteRe *regexp.Regexp)
 	case "ADD":
 		if accessID != 0 {
 			utils.ReturnJsonResponse(w, http.StatusBadRequest, utils.BadRequestMessage())
-			return
+		} else {
+			_, err = db.AddAccess(accessDate.USERACCESSID, noteID)
+			utils.ReturnJsonResponse(w, http.StatusOK, utils.SuccessMessage())
 		}
-		_, err = db.AddAccess(accessDate.USERACCESSID, noteID)
 	case "DELETE":
 		if accessID == 0 {
 			utils.ReturnJsonResponse(w, http.StatusBadRequest, utils.BadRequestMessage())
-			return
+		} else {
+			_, err = db.DeleteAccess(accessID)
+			utils.ReturnJsonResponse(w, http.StatusOK, utils.SuccessMessage())
 		}
-		_, err = db.DeleteAccess(accessID)
 	default:
 		utils.ReturnJsonResponse(w, http.StatusBadRequest, utils.BadRequestMessage())
-		return
 	}
-	if err != nil {
-		utils.ReturnJsonResponse(w, http.StatusBadRequest, utils.BadRequestMessage())
-		return
-	}
-	utils.ReturnJsonResponse(w, http.StatusOK, utils.SuccessMessage())
 	return
 
 }
@@ -231,7 +223,7 @@ func AddNote(w http.ResponseWriter, r *http.Request) {
 	var noteID int
 	noteID, err = db.AddNote(note, user.ID)
 
-	if err != nil {
+	if err != nil || noteID == 0 {
 		utils.ReturnJsonResponse(w, http.StatusBadRequest, utils.BadRequestMessage())
 		return
 	}
@@ -266,6 +258,10 @@ func UpdateNote(w http.ResponseWriter, r *http.Request) {
 	if err != nil || id == 0 {
 		utils.ReturnJsonResponse(w, http.StatusBadRequest, utils.BadRequestMessage())
 		return
+	}
+	if note.EXPIRE > 0 {
+		ch := make(chan bool)
+		go db.DeleteNoteInTime(id, note.EXPIRE, ch)
 	}
 	utils.ReturnJsonResponse(w, http.StatusOK, utils.SuccessMessage())
 	return

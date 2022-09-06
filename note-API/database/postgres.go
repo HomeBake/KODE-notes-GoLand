@@ -1,10 +1,34 @@
 package db
 
 import (
+	"database/sql"
 	"errors"
+	"fmt"
 	"note-API/models"
+	"os"
 	"time"
 )
+
+func OpenConnection() *sql.DB {
+	dialect := os.Getenv("dialect")
+	host := os.Getenv("host")
+	port := os.Getenv("port")
+	user := os.Getenv("user")
+	password := os.Getenv("password")
+	dbname := os.Getenv("dbname")
+	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+	bd, err := sql.Open(dialect, psqlInfo)
+	if err != nil {
+		panic(err)
+	}
+	err = bd.Ping()
+	if err != nil {
+		panic(err)
+	}
+
+	return bd
+}
 
 func isUser(l string, p string) (bool, int) {
 	bd := OpenConnection()
@@ -95,7 +119,7 @@ func getNotes(sortField string, userID int) ([]models.Note, error) {
 			"isprivate",
 			"-isprivate",
 		}
-		if isItemExists(sortFields, sortField) {
+		if _, err := isItemExists(sortFields, sortField); err == nil {
 			query = "SELECT * FROM NOTE WHERE USERID = $1 ORDER BY " + sortField
 		} else {
 			return nil, errors.New("sort field is not exist")

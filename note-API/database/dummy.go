@@ -80,9 +80,12 @@ func deleteNoteInTimeDummy(noteID int, second int, ch chan bool) {
 	time.Sleep(time.Duration(second) * time.Second)
 	ok, err := deleteNoteDummy(noteID)
 	if err != nil || ok == 0 {
-
+		//log
+		ch <- false
+		return
 	}
 	ch <- true
+	return
 }
 
 func addUserDummy(log string, pass string) (ok bool, err error) {
@@ -235,4 +238,82 @@ func deleteNoteDummy(noteID int) (int, error) {
 	}
 	delete(NoteDB, noteID)
 	return noteID, nil
+}
+
+func FillDB() {
+	notes := map[int]models.Note{
+		1: {
+			ID:        1,
+			BODY:      "1",
+			TITLE:     "2",
+			ISPRIVATE: true,
+			EXPIRE:    0,
+			USERID:    1,
+		},
+		2: {
+			ID:        2,
+			BODY:      "1",
+			TITLE:     "2",
+			ISPRIVATE: true,
+			EXPIRE:    0,
+			USERID:    1,
+		},
+		3: {
+			ID:        3,
+			BODY:      "1",
+			TITLE:     "2",
+			ISPRIVATE: false,
+			EXPIRE:    0,
+			USERID:    1,
+		},
+		4: {
+			ID:        4,
+			BODY:      "1",
+			TITLE:     "2",
+			ISPRIVATE: false,
+			EXPIRE:    0,
+			USERID:    2,
+		},
+		5: {
+			ID:        5,
+			BODY:      "1",
+			TITLE:     "2",
+			ISPRIVATE: false,
+			EXPIRE:    0,
+			USERID:    3,
+		},
+		6: {
+			ID:        6,
+			BODY:      "1",
+			TITLE:     "2",
+			ISPRIVATE: false,
+			EXPIRE:    0,
+			USERID:    3,
+		},
+	}
+	NoteDB = notes
+	users := map[int]models.UserData{
+		1: {
+			ID:       1,
+			LOGIN:    "1",
+			PASSWORD: "1",
+		},
+		2: {
+			ID:       2,
+			LOGIN:    "2",
+			PASSWORD: "1",
+		},
+		3: {
+			ID:       3,
+			LOGIN:    "3",
+			PASSWORD: "1",
+		},
+	}
+	UserDB = users
+	access := models.AccessDate{
+		ID:           1,
+		USERACCESSID: 2,
+		NOTEID:       1,
+	}
+	AccessDateDB[access.ID] = access
 }
