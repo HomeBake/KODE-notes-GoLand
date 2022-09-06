@@ -53,6 +53,7 @@ func ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func (a *App) InitializeBd(db string) {
+	utils.InfoLog.Printf("Database initialize on %s mode", db)
 	if db == "postgres" {
 		os.Setenv("bdType", "postgres")
 		os.Setenv("dialect", "postgres")
@@ -72,7 +73,7 @@ func (a *App) Run(addr string) {
 	mux.HandleFunc("/api/", ServeHTTP)
 	err := http.ListenAndServe(addr, &mux)
 	if err != nil {
-		fmt.Println(err)
+		utils.ErrorLog.Fatalf("Cannot listen port %s", addr)
 		os.Exit(1)
 	}
 }
