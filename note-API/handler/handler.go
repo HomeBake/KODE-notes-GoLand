@@ -65,7 +65,6 @@ func isAuth(r *http.Request) (bool, models.UserData) {
 		LOGIN:    "1",
 		PASSWORD: "1",
 	}
-	return true, userDate
 	isOK := false
 	userDate.LOGIN, userDate.PASSWORD, isOK = r.BasicAuth()
 	if isOK != true {
