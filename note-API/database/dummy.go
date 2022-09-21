@@ -110,7 +110,7 @@ func getNotesDummy(sortField string, userID int) ([]models.Note, error) {
 		if element.USERID == userID {
 			noteBD = append(noteBD, element)
 		}
-	}
+	}//TO-DO Просто взять слайс
 
 	if sortField != "" {
 		sortFields := map[string]SortField{
@@ -163,7 +163,7 @@ func getNotesDummy(sortField string, userID int) ([]models.Note, error) {
 						"ISPRIVATE": strconv.FormatBool(noteBD[j].ISPRIVATE),
 						"EXPIRE":    strconv.Itoa(noteBD[j].EXPIRE),
 						"USERID":    strconv.Itoa(noteBD[j].USERID),
-					}
+					}//TO-DO Вынести повторяющийся код
 					return noteI[sortInfo.field] > noteJ[sortInfo.field]
 				})
 			}
